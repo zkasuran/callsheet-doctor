@@ -66,8 +66,9 @@ Callsheet Doctor is built as a real SaaS product, not a demo screen.
 - **Authenticated app shell**: a left sidebar (Overview, Diagnosis, Pipeline, Contacts, Inbox), a top bar with a production switcher and the live inbox status, and a first-run flow for a brand new account.
 - **Overview dashboard**: KPI stat cards (gaps diagnosed, awaiting reply, confirmed, budget confirmed), a live outreach funnel, a quoted-by-category breakdown, and a recent-activity feed. Everything is a Convex `useQuery`, so it updates the instant an email is sent or a reply lands.
 - **Diagnosis**: paste a script, run the AI breakdown, then source contacts and fire outreach per gap.
-- **Pipeline**: a six-column kanban of every errand, with a detail drawer that shows the full email thread as a chat.
-- **Contacts** and **Inbox** pages round out the workspace.
+- **Pipeline**: a six-column kanban of every errand. Click a card for the cockpit drawer: read the full email thread, send a real in-thread reply (with a Draft with AI helper), move the status by hand (Confirm, Negotiating, Decline, Close), and accept or reject each quote. Accepting a quote confirms the errand and feeds the budget.
+- **Overview** also surfaces a "Needs your attention" list (replies awaiting you, follow-ups overdue) that jumps straight into the pipeline.
+- **Contacts** and **Inbox** pages round out the workspace. From Contacts you can start an outreach errand for any vendor in one step, and the top-bar settings let you rename or archive a production.
 
 ## Architecture
 
