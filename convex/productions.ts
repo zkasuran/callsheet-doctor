@@ -86,7 +86,10 @@ export const provisionInbox = action({
       return { inboxId: p.inboxId, inboxAddress: p.inboxAddress };
     }
     const username = `callsheet-${slugify(p.name)}-${Math.random().toString(36).slice(2, 7)}`;
-    const res = await createInbox({ username, displayName: `${p.name} (Callsheet Doctor)` });
+    // AgentMail rejects punctuation like ( ) in display names, so keep it to letters,
+    // numbers, spaces and a dash.
+    const safeName = p.name.replace(/[^A-Za-z0-9 -]/g, "").trim().slice(0, 40) || "Production";
+    const res = await createInbox({ username, displayName: `${safeName} via Callsheet Doctor` });
     // AgentMail returns inbox_id and email, and the inbox id IS the address.
     const inboxId = res.inbox_id ?? res.inboxId ?? `${username}@agentmail.to`;
     const inboxAddress = res.email ?? res.email_address ?? inboxId;

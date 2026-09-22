@@ -20,7 +20,11 @@ import type * as lib_agentmail from "../lib/agentmail.js";
 import type * as lib_firecrawl from "../lib/firecrawl.js";
 import type * as lib_llm from "../lib/llm.js";
 import type * as lib_svix from "../lib/svix.js";
+import type * as lib_totp from "../lib/totp.js";
+import type * as lib_webauthn from "../lib/webauthn.js";
+import type * as mfa from "../mfa.js";
 import type * as productions from "../productions.js";
+import type * as reset from "../reset.js";
 
 import type {
   ApiFromModules,
@@ -41,7 +45,11 @@ declare const fullApi: ApiFromModules<{
   "lib/firecrawl": typeof lib_firecrawl;
   "lib/llm": typeof lib_llm;
   "lib/svix": typeof lib_svix;
+  "lib/totp": typeof lib_totp;
+  "lib/webauthn": typeof lib_webauthn;
+  mfa: typeof mfa;
   productions: typeof productions;
+  reset: typeof reset;
 }>;
 
 /**

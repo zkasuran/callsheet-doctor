@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button, Card, Icon } from "./ui";
+import ResetFlow from "./ResetFlow";
 
 export default function SignIn({ onBack }: { onBack?: () => void }) {
   const { signIn } = useAuthActions();
@@ -9,6 +10,9 @@ export default function SignIn({ onBack }: { onBack?: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  if (resetting) return <ResetFlow onBack={() => setResetting(false)} />;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,12 +89,20 @@ export default function SignIn({ onBack }: { onBack?: () => void }) {
               {flow === "signUp" ? "Sign up" : "Sign in"}
             </Button>
           </form>
-          <button
-            className="mt-4 text-xs text-white/50 hover:text-white/80"
-            onClick={() => setFlow(flow === "signUp" ? "signIn" : "signUp")}
-          >
-            {flow === "signUp" ? "Already have an account? Sign in" : "Need an account? Sign up"}
-          </button>
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <button
+              className="text-xs text-white/50 hover:text-white/80"
+              onClick={() => setFlow(flow === "signUp" ? "signIn" : "signUp")}
+            >
+              {flow === "signUp" ? "Already have an account? Sign in" : "Need an account? Sign up"}
+            </button>
+            <button
+              className="text-xs text-white/50 hover:text-white/80"
+              onClick={() => setResetting(true)}
+            >
+              Forgot password?
+            </button>
+          </div>
         </Card>
       </div>
     </main>

@@ -44,8 +44,21 @@ Crew, ...) is a filter on `kind`, not a separate table. Around it sit `productio
 - Marketing landing page for signed-out visitors.
 - Authenticated app shell with a sidebar, a production switcher, and live inbox status.
 - Pages: Overview (KPIs, funnel, quoted-by-category, activity feed), Diagnosis, Pipeline (kanban +
-  email-thread drawer), Contacts, Inbox.
+  email-thread drawer), Contacts, Inbox, Security.
 - Shared design system in `src/ui.tsx`.
+
+## Security and password reset
+
+There is no email password reset. A user resets a forgotten password only by proving a second factor
+they enrolled while signed in:
+
+- **TOTP** (authenticator apps): RFC 6238, implemented with Web Crypto in `convex/lib/totp.ts`.
+- **Passkeys** (WebAuthn): registration and assertion verification in `convex/lib/webauthn.ts`,
+  supporting ES256 and RS256.
+
+Verifying a factor mints a single-use, short-lived token that authorises setting a new password via
+`modifyAccountCredentials`. Enroll factors on the Security page; reset from "Forgot password?" on the
+sign-in screen.
 
 ## Develop
 
@@ -59,7 +72,9 @@ npm run deploy     # build, deploy backend, push static files to Convex hosting
 
 The Convex deployment needs these environment variables set (`npx convex env set`):
 `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`, `FIRECRAWL_API_KEY`, `AGENTMAIL_API_KEY`, plus
-the Convex Auth keys `JWT_PRIVATE_KEY` and `JWKS`.
+the Convex Auth keys `JWT_PRIVATE_KEY` and `JWKS`. Optionally set a fallback model provider with
+`FALLBACK_OPENAI_BASE_URL`, `FALLBACK_OPENAI_API_KEY` and `FALLBACK_OPENAI_MODEL` for when the
+primary is overloaded.
 
 ## Licence
 

@@ -9,8 +9,9 @@ import Diagnosis from "./pages/Diagnosis";
 import Pipeline from "./pages/Pipeline";
 import Contacts from "./pages/Contacts";
 import InboxPage from "./pages/Inbox";
+import Security from "./pages/Security";
 
-type Page = "overview" | "diagnosis" | "pipeline" | "contacts" | "inbox";
+type Page = "overview" | "diagnosis" | "pipeline" | "contacts" | "inbox" | "security";
 
 const NAV: { key: Page; label: string; icon: React.ReactNode }[] = [
   { key: "overview", label: "Overview", icon: <Icon.Dashboard /> },
@@ -18,6 +19,7 @@ const NAV: { key: Page; label: string; icon: React.ReactNode }[] = [
   { key: "pipeline", label: "Pipeline", icon: <Icon.Board /> },
   { key: "contacts", label: "Contacts", icon: <Icon.Contacts /> },
   { key: "inbox", label: "Inbox", icon: <Icon.Inbox /> },
+  { key: "security", label: "Security", icon: <Icon.Bolt /> },
 ];
 
 export default function Workspace() {
@@ -117,6 +119,8 @@ export default function Workspace() {
             <div className="grid h-full place-items-center text-white/40">
               <Spinner className="h-6 w-6" />
             </div>
+          ) : page === "security" ? (
+            <Security />
           ) : !active ? (
             <FirstRun
               onCreate={async (name, logline) => {

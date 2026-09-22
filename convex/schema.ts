@@ -129,4 +129,40 @@ export default defineSchema({
     handled: v.boolean(),
     receivedAt: v.number(),
   }).index("by_event", ["eventId"]),
+
+  // Second factors a user has enrolled. There is no email password reset, so a factor
+  // here is the only way to reset a forgotten password. One row per user.
+  //  - TOTP: an authenticator-app secret (RFC 6238), stored once confirmed.
+  //  - Passkeys: WebAuthn credentials, each with its public key and signature counter.
+  mfa: defineTable({
+    userId: v.id("users"),
+    email: v.string(), // lower-cased, lets the reset flow find factors before sign-in
+    totpSecret: v.optional(v.string()), // base32, present once TOTP is enrolled
+    totpEnabled: v.boolean(),
+    passkeys: v.array(
+      v.object({
+        credentialId: v.string(), // base64url
+        publicKey: v.string(), // base64url SPKI of the COSE key
+        alg: v.number(), // COSE alg id, -7 = ES256, -257 = RS256
+        counter: v.number(),
+        label: v.optional(v.string()),
+        createdAt: v.number(),
+      }),
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_email", ["email"]),
+
+  // Short-lived challenges. Used both for a WebAuthn ceremony (the random challenge the
+  // authenticator signs) and to gate the final password set on a verified second factor.
+  resetChallenges: defineTable({
+    email: v.string(),
+    challenge: v.string(), // base64url random, for passkey ceremonies
+    kind: v.union(v.literal("passkey_register"), v.literal("passkey_reset"), v.literal("reset")),
+    verified: v.boolean(), // flips true once a factor is verified, unlocks the password set
+    userId: v.optional(v.id("users")),
+    expiresAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_challenge", ["challenge"]),
 });
