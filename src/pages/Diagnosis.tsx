@@ -105,7 +105,7 @@ export default function Diagnosis({ productionId }: { productionId: Id<"producti
 
       <div className="grid gap-6 lg:grid-cols-[24rem_1fr]">
         {/* Script intake */}
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="diagnosis-intake">
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold">Script or treatment</h3>

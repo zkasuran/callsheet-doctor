@@ -10,6 +10,7 @@ import Pipeline from "./pages/Pipeline";
 import Contacts from "./pages/Contacts";
 import InboxPage from "./pages/Inbox";
 import Security from "./pages/Security";
+import Tour, { type TourStep } from "./Tour";
 
 type Page = "overview" | "diagnosis" | "pipeline" | "contacts" | "inbox" | "security";
 
@@ -22,6 +23,62 @@ const NAV: { key: Page; label: string; icon: React.ReactNode }[] = [
   { key: "security", label: "Security", icon: <Icon.Bolt /> },
 ];
 
+const TOUR_STEPS: TourStep[] = [
+  {
+    target: "",
+    title: "Welcome to Callsheet Doctor",
+    body: "This 60-second tour shows how to take a script from a pile of gaps to a locked shoot. Use Next, or arrow keys.",
+  },
+  {
+    target: "production-switcher",
+    title: "Pick a production",
+    body: "Each film is its own workspace with its script, contacts, outreach and budget. Switch between them or start a new one here.",
+    page: "overview",
+  },
+  {
+    target: "nav-diagnosis",
+    title: "1. Diagnose the script",
+    body: "Paste a screenplay or treatment. The AI reads it like a line producer and lists every location, cast, crew, gear and permit gap.",
+    page: "diagnosis",
+  },
+  {
+    target: "diagnosis-intake",
+    title: "Paste and run",
+    body: "Drop in the script (or hit Use sample) and run the diagnosis. Each gap becomes a card you can cure.",
+    page: "diagnosis",
+  },
+  {
+    target: "nav-contacts",
+    title: "2. Source real vendors",
+    body: "On any gap, search and Firecrawl crawls the web for the right venue or rental house and pulls a real contact email. They collect here.",
+    page: "contacts",
+  },
+  {
+    target: "nav-inbox",
+    title: "3. Send from your own inbox",
+    body: "Each production gets a real inbox. The doctor drafts and sends the outreach, then threads every reply back in.",
+    page: "inbox",
+  },
+  {
+    target: "nav-pipeline",
+    title: "4. Watch it close",
+    body: "The pipeline moves on its own as replies land. Click any card to read the full email thread. Quotes fill the budget automatically.",
+    page: "pipeline",
+  },
+  {
+    target: "nav-security",
+    title: "Secure your account",
+    body: "There is no email password reset. Enroll an authenticator or a passkey here, and that factor is how you reset a forgotten password.",
+    page: "security",
+  },
+  {
+    target: "tour-button",
+    title: "That's the tour",
+    body: "You can replay it any time from here. Now paste a script and let the doctor start the calls.",
+    page: "overview",
+  },
+];
+
 export default function Workspace() {
   const { signOut } = useAuthActions();
   const productions = useQuery(api.productions.list);
@@ -29,8 +86,27 @@ export default function Workspace() {
 
   const [selected, setSelected] = useState<Id<"productions"> | null>(null);
   const [page, setPage] = useState<Page>("overview");
+  const [tourOpen, setTourOpen] = useState(false);
   const active = selected ?? productions?.[0]?._id ?? null;
   const production = useQuery(api.productions.get, active ? { productionId: active } : "skip");
+
+  // Auto-run the tour once per browser, the first time the app loads for a signed-in user.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!localStorage.getItem("callsheet.tourSeen")) {
+      const t = setTimeout(() => setTourOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  function closeTour() {
+    setTourOpen(false);
+    try {
+      localStorage.setItem("callsheet.tourSeen", "1");
+    } catch {
+      /* ignore storage errors (private mode) */
+    }
+  }
 
   return (
     <div className="flex min-h-full">
@@ -50,6 +126,7 @@ export default function Workspace() {
           {NAV.map((n) => (
             <button
               key={n.key}
+              data-tour={`nav-${n.key}`}
               onClick={() => setPage(n.key)}
               className={cx(
                 "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
@@ -78,19 +155,21 @@ export default function Workspace() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
         <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/10 bg-[#0b0f14]/85 px-5 py-3 backdrop-blur">
-          <ProductionSwitcher
-            productions={productions}
-            active={active}
-            onSelect={(id) => {
-              setSelected(id);
-              setPage("overview");
-            }}
-            onCreate={async (name, logline) => {
-              const id = await createProduction({ name, logline: logline || undefined });
-              setSelected(id);
-              setPage("diagnosis");
-            }}
-          />
+          <div data-tour="production-switcher">
+            <ProductionSwitcher
+              productions={productions}
+              active={active}
+              onSelect={(id) => {
+                setSelected(id);
+                setPage("overview");
+              }}
+              onCreate={async (name, logline) => {
+                const id = await createProduction({ name, logline: logline || undefined });
+                setSelected(id);
+                setPage("diagnosis");
+              }}
+            />
+          </div>
           <div className="flex-1" />
           {production?.inboxAddress ? (
             <Badge tone="confirmed">
@@ -99,6 +178,14 @@ export default function Workspace() {
           ) : production ? (
             <Badge tone="waiting">Inbox not provisioned</Badge>
           ) : null}
+          <button
+            data-tour="tour-button"
+            onClick={() => setTourOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-white/70 hover:bg-white/5 hover:text-white/90"
+            title="Take the product tour"
+          >
+            <Icon.Sparkles className="h-3.5 w-3.5" /> Tour
+          </button>
           {/* Mobile nav */}
           <select
             value={page}
@@ -142,6 +229,16 @@ export default function Workspace() {
           )}
         </main>
       </div>
+
+      {tourOpen && (
+        <Tour
+          steps={TOUR_STEPS}
+          onStep={(p) => {
+            if (p) setPage(p);
+          }}
+          onClose={closeTour}
+        />
+      )}
     </div>
   );
 }
