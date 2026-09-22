@@ -25,6 +25,7 @@ import type * as lib_webauthn from "../lib/webauthn.js";
 import type * as mfa from "../mfa.js";
 import type * as productions from "../productions.js";
 import type * as reset from "../reset.js";
+import type * as seed from "../seed.js";
 
 import type {
   ApiFromModules,
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   mfa: typeof mfa;
   productions: typeof productions;
   reset: typeof reset;
+  seed: typeof seed;
 }>;
 
 /**

@@ -83,12 +83,26 @@ export default function Workspace() {
   const { signOut } = useAuthActions();
   const productions = useQuery(api.productions.list);
   const createProduction = useMutation(api.productions.create);
+  const seedIfEmpty = useMutation(api.seed.seedIfEmpty);
+  const seededRef = useRef(false);
+  const [seeding, setSeeding] = useState(false);
 
   const [selected, setSelected] = useState<Id<"productions"> | null>(null);
   const [page, setPage] = useState<Page>("overview");
   const [tourOpen, setTourOpen] = useState(false);
   const active = selected ?? productions?.[0]?._id ?? null;
   const production = useQuery(api.productions.get, active ? { productionId: active } : "skip");
+
+  // First time a signed-in user has no productions, preload a few sample ones so the
+  // dashboard, pipeline and inbox are populated instead of empty. Guarded by a ref and
+  // by the query itself (seedIfEmpty is a no-op when productions already exist).
+  useEffect(() => {
+    if (productions !== undefined && productions.length === 0 && !seededRef.current) {
+      seededRef.current = true;
+      setSeeding(true);
+      seedIfEmpty({}).finally(() => setSeeding(false));
+    }
+  }, [productions, seedIfEmpty]);
 
   // Auto-run the tour once per browser, the first time the app loads for a signed-in user.
   useEffect(() => {
@@ -205,6 +219,16 @@ export default function Workspace() {
           {productions === undefined ? (
             <div className="grid h-full place-items-center text-white/40">
               <Spinner className="h-6 w-6" />
+            </div>
+          ) : seeding && productions.length === 0 ? (
+            <div className="grid h-full place-items-center px-6 text-center">
+              <div>
+                <Spinner className="mx-auto h-6 w-6" />
+                <p className="mt-4 text-sm font-medium text-white/70">Setting up your workspace</p>
+                <p className="mt-1 text-xs text-white/40">
+                  Loading a few sample productions so you can look around.
+                </p>
+              </div>
             </div>
           ) : page === "security" ? (
             <Security />
