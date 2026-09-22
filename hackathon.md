@@ -9,7 +9,7 @@
 - **Convex deployment:** prod `confident-mule-621` (team asuran, project callsheet)
 - **Components:** `@convex-dev/static-hosting`
 - **Convex features:** queries, mutations, actions, http actions, crons, scheduler, real-time subscriptions, auth
-- **Auth:** Convex Auth. Email + password for real accounts, plus one-click Anonymous guest access so anyone can try the app instantly. Every production and errand is scoped to the signed-in user, guest or not. Password reset is gated on a second factor the user enrolled (TOTP authenticator or passkey), since there is no email reset.
+- **Auth:** Convex Auth. Email + password for real accounts, plus one-click Anonymous guest access so anyone can try the app instantly. A guest can upgrade to a real account in place by adding an email and password, which links to their existing user so all their productions, contacts and worked errands carry over (no data loss, no duplicate account). Every production and errand is scoped to the signed-in user, guest or not. Password reset is gated on a second factor the user enrolled (TOTP authenticator or passkey), since there is no email reset.
 - **AI models:** gpt-oss-120b (OpenAI's open-weight model, Apache-2.0) over an OpenAI-compatible endpoint, with an automatic fallback to a second OpenAI-compatible provider when the primary is overloaded.
 - **Started:** 2026-09-22
 - **Last updated:** 2026-09-22
