@@ -9,7 +9,7 @@
 - **Convex deployment:** prod `confident-mule-621` (team asuran, project callsheet)
 - **Components:** `@convex-dev/static-hosting`
 - **Convex features:** queries, mutations, actions, http actions, crons, scheduler, real-time subscriptions, auth
-- **Auth:** Convex Auth (email + password). Every production and errand is scoped to the signed-in user. Password reset is gated on a second factor the user enrolled (TOTP authenticator or passkey), since there is no email reset.
+- **Auth:** Convex Auth. Email + password for real accounts, plus one-click Anonymous guest access so anyone can try the app instantly. Every production and errand is scoped to the signed-in user, guest or not. Password reset is gated on a second factor the user enrolled (TOTP authenticator or passkey), since there is no email reset.
 - **AI models:** gpt-oss-120b (OpenAI's open-weight model, Apache-2.0) over an OpenAI-compatible endpoint, with an automatic fallback to a second OpenAI-compatible provider when the primary is overloaded.
 - **Started:** 2026-09-22
 - **Last updated:** 2026-09-22
@@ -17,14 +17,15 @@
 ## Try it (for judges)
 
 1. Open https://confident-mule-621.convex.site
-2. Sign in with the ready demo account, or create your own:
+2. Fastest path: click **Try it as a guest**. No account needed. It opens a workspace
+   preloaded with **ten fully diagnosed productions** (Midnight Run, The Long Table, Signal
+   Lost, Paper Planes, Neon Alley, The Bakehouse, Cold Open, Tidewater, Understudy, Dust
+   Bowl) so you can immediately see what the product does. A banner offers to create an
+   account to keep the work.
+3. Or sign in with the ready demo account, or create your own:
    - **Email:** `judge@callsheet.demo`
    - **Password:** `CallsheetDemo1`
-   - The demo workspace "Midnight Run (demo)" already has a script, two vendor contacts
-     that Firecrawl sourced off the live web, and a provisioned AgentMail inbox.
-   - A brand new account is preloaded with three sample productions (Midnight Run, The Long
-     Table, Signal Lost) so the dashboard, pipeline and inbox are populated to explore right
-     away. That preloaded data is illustrative; the live actions below do the real work.
+   - This account has an authenticator (TOTP) already enrolled for the password-reset demo.
 3. Things to try:
    - **Guided tour:** it runs automatically the first time you sign in and walks through the whole
      workflow. Replay it any time from the "Tour" button in the top bar.
