@@ -1,9 +1,35 @@
 @import "tailwindcss";
 
-:root {
+/* ------------------------------------------------------------------ *
+ * Theme system.
+ * The app is authored dark-first with white/xx and black/xx overlay
+ * utilities. Tailwind v4 emits those as
+ *   color-mix(in oklab, var(--color-white) N%, transparent)
+ * so a whole light theme is just a swap of --color-white / --color-black
+ * plus the base surfaces, with zero component changes.
+ * ------------------------------------------------------------------ */
+
+:root,
+[data-theme="dark"] {
+  --app-bg: #0b0f14; /* page */
+  --app-panel: #0e141b; /* dropdowns, drawers, modals */
+  --app-fg: #e6edf3; /* base text */
   color-scheme: dark;
-  --bg: #0b0f14;
-  --fg: #e6edf3;
+}
+
+[data-theme="light"] {
+  /* Flip the overlay inks: white/xx becomes dark-on-light, black/xx stays a dimmer. */
+  --color-white: #0b1220; /* so text-white/70, bg-white/5, border-white/10 read dark */
+  --color-black: #1b2430; /* scrims stay dark-ish for modal dimming */
+  --app-bg: #f6f7f9;
+  --app-panel: #ffffff;
+  --app-fg: #0b1220;
+  color-scheme: light;
+}
+
+:root {
+  --bg: var(--app-bg);
+  --fg: var(--app-fg);
 }
 
 html,
@@ -14,34 +40,53 @@ body,
 }
 
 body {
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--app-bg);
+  color: var(--app-fg);
   font-family:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* Remap the few hardcoded hex surfaces so they follow the theme.
+   These utilities are used for the page background and the panels. */
+.bg-\[\#0b0f14\] {
+  background-color: var(--app-bg) !important;
+}
+.bg-\[\#0b0f14\]\/80 {
+  background-color: color-mix(in oklab, var(--app-bg) 80%, transparent) !important;
+}
+.bg-\[\#0b0f14\]\/85 {
+  background-color: color-mix(in oklab, var(--app-bg) 85%, transparent) !important;
+}
+.bg-\[\#0e141b\] {
+  background-color: var(--app-panel) !important;
+}
+
+/* In light mode the primary emerald tone is a touch deep for large fills;
+   nudge the emerald button text to stay legible (emerald-950 already dark). */
 
 /* Smooth in-page anchor jumps on the marketing site. */
 html {
   scroll-behavior: smooth;
 }
 
-/* Quiet, thin scrollbars that match the dark theme. */
+/* Quiet, thin scrollbars that adapt to the theme. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: color-mix(in oklab, var(--app-fg) 20%, transparent) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: color-mix(in oklab, var(--app-fg) 18%, transparent);
   border-radius: 9999px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: color-mix(in oklab, var(--app-fg) 30%, transparent);
 }
 
 /* Respect reduced-motion preferences. */

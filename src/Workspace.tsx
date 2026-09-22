@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
-import { Badge, Button, Card, Icon, Spinner, cx } from "./ui";
+import { Badge, Button, Card, Icon, Spinner, ThemeToggle, cx } from "./ui";
 import Overview from "./pages/Overview";
 import Diagnosis from "./pages/Diagnosis";
 import Pipeline from "./pages/Pipeline";
@@ -217,6 +217,7 @@ export default function Workspace() {
           >
             <Icon.Sparkles className="h-3.5 w-3.5" /> Tour
           </button>
+          <ThemeToggle />
           {/* Mobile nav */}
           <select
             value={page}

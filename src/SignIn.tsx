@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Button, Card, Icon } from "./ui";
+import { Button, Card, Icon, ThemeToggle } from "./ui";
 import ResetFlow from "./ResetFlow";
 
 export default function SignIn({ onBack, onGuest }: { onBack?: () => void; onGuest?: () => void }) {
@@ -39,7 +39,10 @@ export default function SignIn({ onBack, onGuest }: { onBack?: () => void; onGue
   }
 
   return (
-    <main className="grid min-h-full place-items-center px-6 py-10">
+    <main className="relative grid min-h-full place-items-center px-6 py-10">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-sm">
         {onBack && (
           <button

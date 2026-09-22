@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Icon, cx } from "./ui";
+import { Badge, Button, Card, Icon, ThemeToggle, cx } from "./ui";
 
 /* The public marketing site, shown to anyone not signed in. Real SaaS shape:
    hero, the problem, how it works, the sponsor stack doing real work, and a CTA. */
@@ -61,6 +61,7 @@ export default function Landing({ onStart, onGuest }: { onStart: () => void; onG
           <Button size="sm" onClick={onStart}>
             Open the app
           </Button>
+          <ThemeToggle />
         </div>
       </header>
 
