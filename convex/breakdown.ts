@@ -8,7 +8,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { chatJSON } from "./lib/llm";
+import { chatJSON, chatText } from "./lib/llm";
 
 const CATEGORIES =
   "location, cast, crew, gear, permit, catering, clearance, insurance, travel, festival, press, distribution";
@@ -81,6 +81,32 @@ export const _getProductionText = internalQuery({
       .withIndex("by_production", (q) => q.eq("productionId", productionId))
       .collect();
     return scripts.map((s) => s.text).join("\n\n");
+  },
+});
+
+// Turn a rough brief or a few hints into a clean short treatment the diagnosis can read.
+// Judges and first-time users rarely have a full screenplay to paste, so this lets them
+// describe the film in plain language and get a producible scene outline back to edit.
+export const generateScript = action({
+  args: { productionId: v.id("productions"), brief: v.string() },
+  handler: async (ctx, { productionId, brief }): Promise<{ text: string }> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not signed in");
+    const p = await ctx.runQuery(internal.productions._get, { productionId });
+    if (!p || p.ownerId !== userId) throw new Error("Not your production");
+    if (!brief.trim()) throw new Error("Add a brief or a few hints first");
+
+    const text = await chatText(
+      "You are a screenwriter and line producer. Turn the writer's brief or hints into a short, " +
+        "shootable treatment: three to six slugged scenes (INT./EXT., LOCATION, TIME), each two to " +
+        "four sentences of concrete visual action that implies real production needs (locations, cast, " +
+        "gear, stunts, permits, vehicles, wardrobe, catering). Plain text, no markdown, no commentary, " +
+        "no title page. Keep it under 400 words. Make the needs specific enough that a producer could " +
+        "break it down.",
+      brief.slice(0, 4000),
+      0.7,
+    );
+    return { text: text.trim() };
   },
 });
 

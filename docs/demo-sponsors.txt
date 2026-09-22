@@ -1,0 +1,7 @@
+$ source + reach out  (Firecrawl scrape, AgentMail send, on prod)
+
+  Firecrawl sourced:
+    Samy's Camera  <rentals@samys.com>
+
+  AgentMail inbox:  callsheet-demo-acivfw@agentmail.to
+  outreach sent:    yes, threaded

@@ -24,6 +24,10 @@ A cargo drone lifts a shipping container. Two DIVERS surface beside it.
 We need a working pier, a picture-car Mustang, a drone operator, marine
 safety cover and a night shoot permit for the warehouse district.`;
 
+const SAMPLE_BRIEF = `A neo-noir short set over one rainy night. A bike courier picks up a
+mysterious package, gets chased across rooftops, and has a tense standoff in a
+late-night diner. Low budget, gritty, real locations. Think Drive meets Blade Runner.`;
+
 export default function Diagnosis({ productionId }: { productionId: Id<"productions"> }) {
   const production = useQuery(api.productions.get, { productionId });
   const items = useQuery(api.breakdown.listItems, { productionId });
@@ -31,11 +35,14 @@ export default function Diagnosis({ productionId }: { productionId: Id<"producti
 
   const addScript = useMutation(api.breakdown.addScript);
   const runDiagnosis = useAction(api.breakdown.run);
+  const generateScript = useAction(api.breakdown.generateScript);
   const findContacts = useAction(api.contacts.find);
   const createErrand = useMutation(api.errands.create);
   const startOutreach = useAction(api.agent.startOutreach);
   const provisionInbox = useAction(api.productions.provisionInbox);
 
+  const [mode, setMode] = useState<"paste" | "brief">("paste");
+  const [brief, setBrief] = useState("");
   const [script, setScript] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<{ text: string; kind: "ok" | "err" } | null>(null);
@@ -53,6 +60,15 @@ export default function Diagnosis({ productionId }: { productionId: Id<"producti
     } finally {
       setBusy(null);
     }
+  }
+
+  async function generate() {
+    await guard("generate", async () => {
+      const res = await generateScript({ productionId, brief });
+      setScript(res.text);
+      setMode("paste");
+      return "Draft script ready. Edit it if you like, then run the diagnosis.";
+    });
   }
 
   async function diagnose() {
@@ -107,36 +123,100 @@ export default function Diagnosis({ productionId }: { productionId: Id<"producti
         {/* Script intake */}
         <div className="space-y-4" data-tour="diagnosis-intake">
           <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Script or treatment</h3>
+            {/* Mode toggle */}
+            <div className="flex rounded-lg border border-white/12 p-0.5 text-xs">
               <button
-                onClick={() => setScript(SAMPLE)}
-                className="text-[11px] text-white/40 hover:text-white/70"
+                onClick={() => setMode("paste")}
+                className={`flex-1 rounded-md px-2 py-1.5 font-medium transition-colors ${
+                  mode === "paste" ? "bg-emerald-500/15 text-emerald-200" : "text-white/50 hover:text-white/80"
+                }`}
               >
-                Use sample
+                Paste a script
+              </button>
+              <button
+                onClick={() => setMode("brief")}
+                className={`flex-1 rounded-md px-2 py-1.5 font-medium transition-colors ${
+                  mode === "brief" ? "bg-emerald-500/15 text-emerald-200" : "text-white/50 hover:text-white/80"
+                }`}
+              >
+                Generate from a brief
               </button>
             </div>
-            <textarea
-              className="mt-3 h-56 w-full resize-none rounded-lg border border-white/15 bg-transparent p-3 text-sm outline-none focus:border-emerald-400/60"
-              placeholder="INT. WAREHOUSE - NIGHT. A vintage Mustang idles..."
-              value={script}
-              onChange={(e) => setScript(e.target.value)}
-            />
-            <Button className="mt-2 w-full" disabled={busy === "diagnose"} onClick={diagnose}>
-              {busy === "diagnose" ? (
-                <>
-                  <Spinner /> Reading the script...
-                </>
-              ) : (
-                <>
-                  <Icon.Sparkles className="h-4 w-4" /> Run diagnosis
-                </>
-              )}
-            </Button>
-            <p className="mt-2 text-[11px] leading-relaxed text-white/35">
-              OpenAI reads the text as a line producer and extracts every concrete need,
-              categorised and scene-referenced.
-            </p>
+
+            {mode === "brief" ? (
+              <>
+                <div className="mt-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Describe the film</h3>
+                  <button
+                    onClick={() => setBrief(SAMPLE_BRIEF)}
+                    className="text-[11px] text-white/40 hover:text-white/70"
+                  >
+                    Use example
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+                  No screenplay needed. A logline, a genre, a few scene ideas, or just the vibe.
+                </p>
+                <textarea
+                  className="mt-2 h-40 w-full resize-none rounded-lg border border-white/15 bg-transparent p-3 text-sm outline-none focus:border-emerald-400/60"
+                  placeholder="A neo-noir chase across a rain-soaked city. A courier on a motorbike, a rooftop handoff, a diner standoff. Low budget, one night shoot."
+                  value={brief}
+                  onChange={(e) => setBrief(e.target.value)}
+                />
+                <Button
+                  className="mt-2 w-full"
+                  disabled={busy === "generate" || !brief.trim()}
+                  onClick={generate}
+                >
+                  {busy === "generate" ? (
+                    <>
+                      <Spinner /> Writing the script...
+                    </>
+                  ) : (
+                    <>
+                      <Icon.Sparkles className="h-4 w-4" /> Generate script
+                    </>
+                  )}
+                </Button>
+                <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+                  OpenAI turns your brief into a short, shootable treatment. You can edit it before
+                  diagnosing.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="mt-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Script or treatment</h3>
+                  <button
+                    onClick={() => setScript(SAMPLE)}
+                    className="text-[11px] text-white/40 hover:text-white/70"
+                  >
+                    Use sample
+                  </button>
+                </div>
+                <textarea
+                  className="mt-3 h-56 w-full resize-none rounded-lg border border-white/15 bg-transparent p-3 text-sm outline-none focus:border-emerald-400/60"
+                  placeholder="INT. WAREHOUSE - NIGHT. A vintage Mustang idles..."
+                  value={script}
+                  onChange={(e) => setScript(e.target.value)}
+                />
+                <Button className="mt-2 w-full" disabled={busy === "diagnose"} onClick={diagnose}>
+                  {busy === "diagnose" ? (
+                    <>
+                      <Spinner /> Reading the script...
+                    </>
+                  ) : (
+                    <>
+                      <Icon.Stethoscope className="h-4 w-4" /> Run diagnosis
+                    </>
+                  )}
+                </Button>
+                <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+                  OpenAI reads the text as a line producer and extracts every concrete need,
+                  categorised and scene-referenced.
+                </p>
+              </>
+            )}
           </Card>
 
           {!hasInbox && (

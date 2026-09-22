@@ -1,0 +1,14 @@
+$ diagnose  (OpenAI reads the script on prod)
+
+  [location ] Bank vault set
+  [location ] Rooftop location
+  [cast     ] Thief
+  [cast     ] Stunt performer
+  [crew     ] Stunt rigger
+  [gear     ] Tuxedo
+  [gear     ] Laser tripwire effect
+  [gear     ] Picture helicopter
+  [gear     ] Descent rope
+  [permit   ] Night rooftop filming permit
+
+  10 needs diagnosed from one scene
