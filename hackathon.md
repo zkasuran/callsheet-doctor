@@ -22,6 +22,9 @@
    - **Password:** `CallsheetDemo1`
    - The demo workspace "Midnight Run (demo)" already has a script, two vendor contacts
      that Firecrawl sourced off the live web, and a provisioned AgentMail inbox.
+   - A brand new account is preloaded with three sample productions (Midnight Run, The Long
+     Table, Signal Lost) so the dashboard, pipeline and inbox are populated to explore right
+     away. That preloaded data is illustrative; the live actions below do the real work.
 3. Things to try:
    - **Guided tour:** it runs automatically the first time you sign in and walks through the whole
      workflow. Replay it any time from the "Tour" button in the top bar.
