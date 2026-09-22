@@ -46,7 +46,7 @@ function Step({ n, title, body }: { n: number; title: string; body: string }) {
   );
 }
 
-export default function Landing({ onStart }: { onStart: () => void }) {
+export default function Landing({ onStart, onGuest }: { onStart: () => void; onGuest: () => void }) {
   return (
     <div className="min-h-full">
       {/* Nav */}
@@ -87,16 +87,20 @@ export default function Landing({ onStart }: { onStart: () => void }) {
             whole shoot lines up while you sleep.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" onClick={onStart}>
-              Diagnose a production <Icon.Arrow className="h-4 w-4" />
+            <Button size="lg" onClick={onGuest}>
+              Try it as a guest <Icon.Arrow className="h-4 w-4" />
             </Button>
-            <a
-              href="#how"
+            <button
+              onClick={onStart}
               className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-5 py-2.5 text-sm text-white/80 hover:bg-white/5"
             >
-              See how it works
-            </a>
+              Sign in or sign up
+            </button>
           </div>
+          <p className="mt-3 text-xs text-white/40">
+            No account needed. Guest mode opens a workspace preloaded with ten diagnosed
+            productions so you can see exactly what it does.
+          </p>
 
           {/* Product frame preview */}
           <div className="mx-auto mt-14 max-w-4xl">
@@ -228,8 +232,8 @@ export default function Landing({ onStart }: { onStart: () => void }) {
           Create a workspace, paste a script, and let the doctor start the calls.
         </p>
         <div className="mt-7">
-          <Button size="lg" onClick={onStart}>
-            Get started free <Icon.Arrow className="h-4 w-4" />
+          <Button size="lg" onClick={onGuest}>
+            Try it as a guest <Icon.Arrow className="h-4 w-4" />
           </Button>
         </div>
       </section>

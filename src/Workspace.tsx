@@ -82,6 +82,7 @@ const TOUR_STEPS: TourStep[] = [
 export default function Workspace() {
   const { signOut } = useAuthActions();
   const productions = useQuery(api.productions.list);
+  const me = useQuery(api.users.me);
   const createProduction = useMutation(api.productions.create);
   const seedIfEmpty = useMutation(api.seed.seedIfEmpty);
   const seededRef = useRef(false);
@@ -227,6 +228,23 @@ export default function Workspace() {
             ))}
           </select>
         </header>
+
+        {/* Guest banner */}
+        {me?.isGuest && (
+          <div className="flex flex-wrap items-center gap-3 border-b border-emerald-400/20 bg-emerald-500/[0.07] px-5 py-2.5 text-sm">
+            <Icon.Sparkles className="h-4 w-4 text-emerald-300" />
+            <span className="text-white/70">
+              You're exploring as a guest. This workspace is preloaded so you can see how it works.
+            </span>
+            <span className="flex-1" />
+            <button
+              onClick={() => void signOut()}
+              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
+            >
+              Create an account to save your work
+            </button>
+          </div>
+        )}
 
         {/* Page body */}
         <main className="flex-1 overflow-y-auto">

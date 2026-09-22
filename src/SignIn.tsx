@@ -3,7 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { Button, Card, Icon } from "./ui";
 import ResetFlow from "./ResetFlow";
 
-export default function SignIn({ onBack }: { onBack?: () => void }) {
+export default function SignIn({ onBack, onGuest }: { onBack?: () => void; onGuest?: () => void }) {
   const { signIn } = useAuthActions();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signUp");
   const [email, setEmail] = useState("");
@@ -103,6 +103,22 @@ export default function SignIn({ onBack }: { onBack?: () => void }) {
               Forgot password?
             </button>
           </div>
+
+          {onGuest && (
+            <>
+              <div className="my-4 flex items-center gap-3 text-[11px] text-white/30">
+                <span className="h-px flex-1 bg-white/10" />
+                or
+                <span className="h-px flex-1 bg-white/10" />
+              </div>
+              <Button variant="ghost" className="w-full" onClick={onGuest}>
+                Continue as guest
+              </Button>
+              <p className="mt-2 text-center text-[11px] text-white/35">
+                Opens a workspace preloaded with ten diagnosed productions. No account needed.
+              </p>
+            </>
+          )}
         </Card>
       </div>
     </main>

@@ -26,6 +26,7 @@ import type * as mfa from "../mfa.js";
 import type * as productions from "../productions.js";
 import type * as reset from "../reset.js";
 import type * as seed from "../seed.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   productions: typeof productions;
   reset: typeof reset;
   seed: typeof seed;
+  users: typeof users;
 }>;
 
 /**
