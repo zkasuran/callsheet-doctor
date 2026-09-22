@@ -1,7 +1,8 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internal, components } from "./_generated/api";
 import { auth } from "./auth";
+import { registerStaticRoutes } from "@convex-dev/static-hosting";
 import { verifySvix } from "./lib/svix";
 import { normalizeInbound } from "./lib/agentmail";
 
@@ -64,5 +65,8 @@ http.route({
     return new Response(null, { status: 200 });
   }),
 });
+
+// Serve the built SPA at the root. Registered LAST so the auth and webhook routes above win.
+registerStaticRoutes(http, components.staticHosting);
 
 export default http;

@@ -16,8 +16,21 @@ export default function SignIn() {
     setError(null);
     try {
       await signIn("password", { email, password, flow });
-    } catch {
-      setError(flow === "signUp" ? "Could not create that account" : "Wrong email or password");
+    } catch (err) {
+      const detail = String(err instanceof Error ? err.message : err).toLowerCase();
+      if (flow === "signUp") {
+        // The most common cause is an email that is already registered, so point
+        // at sign in rather than leaving the person stuck on a dead end.
+        if (detail.includes("already") || detail.includes("exists") || detail.includes("taken")) {
+          setError("That email is already registered. Switch to Sign in below.");
+        } else if (password.length < 8) {
+          setError("Password must be at least 8 characters");
+        } else {
+          setError("Could not create that account. Try signing in instead.");
+        }
+      } else {
+        setError("Wrong email or password");
+      }
     } finally {
       setBusy(false);
     }
