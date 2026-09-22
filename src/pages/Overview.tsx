@@ -60,6 +60,22 @@ export default function Overview({
   const byKind: Record<string, number> = budget?.byKind ?? {};
   const maxKind = Math.max(1, ...Object.values(byKind));
 
+  // Needs attention: replies and quotes waiting on a human decision, plus anything
+  // whose follow-up is overdue. This is the "what do I do next" list.
+  const now = Date.now();
+  const attention = errands
+    .map((e) => {
+      if (e.status === "replied" || e.status === "negotiating") {
+        return { e, why: "Awaiting your reply", tone: "sky" as const };
+      }
+      if ((e.status === "waiting" || e.status === "sent") && e.nextFollowupAt && e.nextFollowupAt < now) {
+        return { e, why: "Follow-up overdue", tone: "amber" as const };
+      }
+      return null;
+    })
+    .filter((x): x is { e: (typeof errands)[number]; why: string; tone: "sky" | "amber" } => !!x)
+    .slice(0, 6);
+
   return (
     <div className="p-6">
       <PageHeader
@@ -115,6 +131,39 @@ export default function Overview({
               icon={<Icon.Coin />}
             />
           </div>
+
+          {/* Needs attention */}
+          {attention.length > 0 && (
+            <Card className="mt-6 p-5">
+              <div className="flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                  <Icon.Bolt className="h-4 w-4 text-amber-300" /> Needs your attention
+                </h3>
+                <span className="text-xs text-white/40">{attention.length} open</span>
+              </div>
+              <ul className="mt-3 space-y-1.5">
+                {attention.map(({ e, why, tone }) => (
+                  <li key={e._id}>
+                    <button
+                      onClick={() => onNavigate("pipeline")}
+                      className="flex w-full items-center gap-3 rounded-lg bg-white/[0.03] px-3 py-2 text-left hover:bg-white/[0.06]"
+                    >
+                      <span className="text-sm">{KIND_ICON[e.kind] ?? "•"}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {e.contact?.name ?? "Contact"}
+                          <span className="ml-2 font-normal text-white/40">{KIND_LABEL[e.kind] ?? e.kind}</span>
+                        </p>
+                        <p className="truncate text-[11px] text-white/45">{e.subject}</p>
+                      </div>
+                      <Badge tone={tone === "sky" ? "replied" : "waiting"}>{why}</Badge>
+                      <Icon.Arrow className="h-3.5 w-3.5 text-white/30" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
             {/* Pipeline funnel */}

@@ -35,6 +35,73 @@ export const create = mutation({
   },
 });
 
+// Manually move an errand's status (Confirm, Decline, Reopen, Close). This is the human
+// override on top of the agent's automatic decisions.
+export const setStatus = mutation({
+  args: {
+    errandId: v.id("errands"),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("waiting"),
+      v.literal("replied"),
+      v.literal("negotiating"),
+      v.literal("confirmed"),
+      v.literal("declined"),
+      v.literal("closed"),
+    ),
+  },
+  handler: async (ctx, { errandId, status }) => {
+    const e = await ctx.db.get(errandId);
+    if (!e || !(await assertOwner(ctx, e.productionId))) throw new Error("Not your errand");
+    const done = status === "confirmed" || status === "declined" || status === "closed";
+    await ctx.db.patch(errandId, {
+      status,
+      nextFollowupAt: done ? undefined : e.nextFollowupAt,
+    });
+  },
+});
+
+// Every quote received on an errand, newest first.
+export const quotesFor = query({
+  args: { errandId: v.id("errands") },
+  handler: async (ctx, { errandId }) => {
+    const e = await ctx.db.get(errandId);
+    if (!e || !(await assertOwner(ctx, e.productionId))) return [];
+    return await ctx.db
+      .query("quotes")
+      .withIndex("by_errand", (q) => q.eq("errandId", errandId))
+      .order("desc")
+      .collect();
+  },
+});
+
+// Accept or reject a quote. Accepting confirms the errand and clears any other proposed
+// quotes on the same errand, so the budget only ever counts one accepted price per errand.
+export const decideQuote = mutation({
+  args: {
+    quoteId: v.id("quotes"),
+    decision: v.union(v.literal("accepted"), v.literal("rejected")),
+  },
+  handler: async (ctx, { quoteId, decision }) => {
+    const quote = await ctx.db.get(quoteId);
+    if (!quote || !(await assertOwner(ctx, quote.productionId))) throw new Error("Not your quote");
+    await ctx.db.patch(quoteId, { status: decision });
+    if (decision === "accepted") {
+      // Reject any sibling proposed quotes on the same errand.
+      const siblings = await ctx.db
+        .query("quotes")
+        .withIndex("by_errand", (q) => q.eq("errandId", quote.errandId))
+        .collect();
+      for (const s of siblings) {
+        if (s._id !== quoteId && s.status === "proposed") {
+          await ctx.db.patch(s._id, { status: "rejected" });
+        }
+      }
+      await ctx.db.patch(quote.errandId, { status: "confirmed", nextFollowupAt: undefined });
+    }
+  },
+});
+
 // The live production chart: every errand with its contact and last message.
 export const board = query({
   args: { productionId: v.id("productions") },
@@ -98,7 +165,8 @@ export const budget = query({
     for (const q of quotes) {
       if (q.status === "accepted") accepted += q.amount;
       if (q.status === "proposed") proposed += q.amount;
-      byKind[q.kind] = (byKind[q.kind] ?? 0) + q.amount;
+      // Category totals count committed and pending money, not rejected quotes.
+      if (q.status !== "rejected") byKind[q.kind] = (byKind[q.kind] ?? 0) + q.amount;
     }
     return { accepted, proposed, byKind, currency: quotes[0]?.currency ?? "USD" };
   },

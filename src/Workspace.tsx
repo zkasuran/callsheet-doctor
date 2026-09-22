@@ -90,6 +90,7 @@ export default function Workspace() {
   const [selected, setSelected] = useState<Id<"productions"> | null>(null);
   const [page, setPage] = useState<Page>("overview");
   const [tourOpen, setTourOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const active = selected ?? productions?.[0]?._id ?? null;
   const production = useQuery(api.productions.get, active ? { productionId: active } : "skip");
 
@@ -184,6 +185,19 @@ export default function Workspace() {
               }}
             />
           </div>
+          {production && (
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="rounded-lg border border-white/15 p-1.5 text-white/50 hover:bg-white/5 hover:text-white/80"
+              title="Production settings"
+              aria-label="Production settings"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+          )}
           <div className="flex-1" />
           {production?.inboxAddress ? (
             <Badge tone="confirmed">
@@ -263,6 +277,110 @@ export default function Workspace() {
           onClose={closeTour}
         />
       )}
+
+      {settingsOpen && active && production && (
+        <ProductionSettings
+          productionId={active}
+          name={production.name}
+          logline={production.logline}
+          archived={production.status === "archived"}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ---------- Production settings (rename / archive) ---------- */
+
+function ProductionSettings({
+  productionId,
+  name,
+  logline,
+  archived,
+  onClose,
+}: {
+  productionId: Id<"productions">;
+  name: string;
+  logline?: string;
+  archived: boolean;
+  onClose: () => void;
+}) {
+  const rename = useMutation(api.productions.rename);
+  const setArchived = useMutation(api.productions.setArchived);
+  const [n, setN] = useState(name);
+  const [l, setL] = useState(logline ?? "");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center p-6">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <Card className="relative w-full max-w-md p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Production settings</h3>
+          <button onClick={onClose} className="rounded p-1 text-white/50 hover:text-white/80" aria-label="Close">
+            <Icon.Close className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <div>
+            <label className="text-xs text-white/45">Name</label>
+            <input
+              className="mt-1 w-full rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-emerald-400/60"
+              value={n}
+              onChange={(e) => setN(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-white/45">Logline</label>
+            <input
+              className="mt-1 w-full rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-emerald-400/60"
+              value={l}
+              onChange={(e) => setL(e.target.value)}
+            />
+          </div>
+          <Button
+            className="w-full"
+            disabled={busy === "save" || !n.trim()}
+            onClick={async () => {
+              setBusy("save");
+              setSaved(false);
+              try {
+                await rename({ productionId, name: n, logline: l || undefined });
+                setSaved(true);
+              } finally {
+                setBusy(null);
+              }
+            }}
+          >
+            {busy === "save" ? <Spinner /> : saved ? "Saved" : "Save changes"}
+          </Button>
+        </div>
+
+        <div className="mt-5 border-t border-white/10 pt-4">
+          <Button
+            variant={archived ? "ghost" : "danger"}
+            className="w-full"
+            disabled={busy === "archive"}
+            onClick={async () => {
+              setBusy("archive");
+              try {
+                await setArchived({ productionId, archived: !archived });
+                onClose();
+              } finally {
+                setBusy(null);
+              }
+            }}
+          >
+            {busy === "archive" ? <Spinner /> : archived ? "Restore production" : "Archive production"}
+          </Button>
+          <p className="mt-2 text-center text-[11px] text-white/35">
+            Archiving hides it from the active list. Nothing is deleted.
+          </p>
+        </div>
+      </Card>
     </div>
   );
 }

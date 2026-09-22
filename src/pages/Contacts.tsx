@@ -1,19 +1,32 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Avatar, Button, Card, Empty, Icon, Skeleton, Spinner } from "../ui";
+import { Avatar, Badge, Button, Card, Empty, Icon, KIND_LABEL, Skeleton, Spinner } from "../ui";
 import PageHeader from "./PageHeader";
 
+const KINDS = [
+  "location", "cast", "crew", "gear", "permit", "catering",
+  "clearance", "insurance", "travel", "festival", "press", "distribution",
+];
+
 export default function Contacts({ productionId }: { productionId: Id<"productions"> }) {
+  const production = useQuery(api.productions.get, { productionId });
   const contacts = useQuery(api.contacts.list, { productionId });
   const createContact = useMutation(api.contacts.create);
+  const createErrand = useMutation(api.errands.create);
+  const startOutreach = useAction(api.agent.startOutreach);
 
+  const [reachOut, setReachOut] = useState<Id<"contacts"> | null>(null);
+  const [kind, setKind] = useState("crew");
+  const [goal, setGoal] = useState("");
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [busy, setBusy] = useState(false);
+  const [outreachBusy, setOutreachBusy] = useState(false);
+  const [note, setNote] = useState<{ text: string; kind: "ok" | "err" } | null>(null);
   const [q, setQ] = useState("");
 
   const filtered = (contacts ?? []).filter((c) => {
@@ -41,6 +54,31 @@ export default function Contacts({ productionId }: { productionId: Id<"productio
     }
   }
 
+  async function launchOutreach(contactId: Id<"contacts">, contactName: string) {
+    setOutreachBusy(true);
+    setNote(null);
+    try {
+      const errandId = await createErrand({
+        productionId,
+        contactId,
+        kind: kind as any,
+        subject: `${production?.name ?? "Production"}: ${KIND_LABEL[kind] ?? kind}`,
+        goal: goal.trim() || `Discuss ${KIND_LABEL[kind] ?? kind} for the production`,
+      });
+      const res = await startOutreach({ errandId });
+      setReachOut(null);
+      setGoal("");
+      setNote({
+        text: res.sent ? `Outreach sent to ${contactName}.` : res.note ?? "Errand created (inbox needed to send).",
+        kind: res.sent ? "ok" : "err",
+      });
+    } catch (e) {
+      setNote({ text: e instanceof Error ? e.message : String(e), kind: "err" });
+    } finally {
+      setOutreachBusy(false);
+    }
+  }
+
   return (
     <div className="p-6">
       <PageHeader
@@ -52,6 +90,16 @@ export default function Contacts({ productionId }: { productionId: Id<"productio
           </Button>
         }
       />
+
+      {note && (
+        <p
+          className={`mb-4 rounded-lg px-3 py-2 text-xs ${
+            note.kind === "err" ? "bg-rose-500/10 text-rose-300" : "bg-emerald-500/10 text-emerald-300"
+          }`}
+        >
+          {note.text}
+        </p>
+      )}
 
       {adding && (
         <Card className="mb-4 p-4">
@@ -109,27 +157,71 @@ export default function Contacts({ productionId }: { productionId: Id<"productio
       ) : (
         <div className="grid gap-2 md:grid-cols-2">
           {filtered.map((c) => (
-            <Card key={c._id} className="flex items-center gap-3 p-3">
-              <Avatar name={c.name} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{c.name}</p>
-                <p className="truncate text-xs text-white/45">{c.email}</p>
-                {(c.company || c.role) && (
-                  <p className="truncate text-[11px] text-white/35">
-                    {[c.role, c.company].filter(Boolean).join(" · ")}
-                  </p>
+            <Card key={c._id} className="p-3">
+              <div className="flex items-center gap-3">
+                <Avatar name={c.name} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{c.name}</p>
+                  <p className="truncate text-xs text-white/45">{c.email}</p>
+                  {(c.company || c.role) && (
+                    <p className="truncate text-[11px] text-white/35">
+                      {[c.role, c.company].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                </div>
+                {c.sourceUrl && (
+                  <a
+                    href={c.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 text-white/30 hover:text-white/70"
+                    title="Source page (found by Firecrawl)"
+                  >
+                    <Icon.Globe className="h-4 w-4" />
+                  </a>
                 )}
-              </div>
-              {c.sourceUrl && (
-                <a
-                  href={c.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="shrink-0 text-white/30 hover:text-white/70"
-                  title="Source page (found by Firecrawl)"
+                <Button
+                  size="sm"
+                  variant={reachOut === c._id ? "subtle" : "ghost"}
+                  onClick={() => {
+                    setReachOut(reachOut === c._id ? null : c._id);
+                    setGoal("");
+                  }}
                 >
-                  <Icon.Globe className="h-4 w-4" />
-                </a>
+                  {reachOut === c._id ? "Cancel" : "Reach out"}
+                </Button>
+              </div>
+
+              {reachOut === c._id && (
+                <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
+                  <div className="flex gap-2">
+                    <select
+                      value={kind}
+                      onChange={(e) => setKind(e.target.value)}
+                      className="rounded-lg border border-white/15 bg-transparent px-2 py-1.5 text-xs text-white/80 outline-none focus:border-emerald-400/60"
+                    >
+                      {KINDS.map((k) => (
+                        <option key={k} value={k} className="bg-[#0e141b]">
+                          {KIND_LABEL[k] ?? k}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      className="flex-1 rounded-lg border border-white/15 bg-transparent px-2.5 py-1.5 text-xs outline-none focus:border-emerald-400/60"
+                      placeholder="What do you need from them?"
+                      value={goal}
+                      onChange={(e) => setGoal(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    disabled={outreachBusy}
+                    onClick={() => launchOutreach(c._id, c.name)}
+                  >
+                    {outreachBusy ? <Spinner /> : <><Icon.Mail className="h-3.5 w-3.5" /> Draft & send outreach</>}
+                  </Button>
+                </div>
               )}
             </Card>
           ))}

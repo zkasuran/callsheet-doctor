@@ -57,6 +57,31 @@ export const get = query({
   },
 });
 
+export const rename = mutation({
+  args: {
+    productionId: v.id("productions"),
+    name: v.string(),
+    logline: v.optional(v.string()),
+  },
+  handler: async (ctx, { productionId, name, logline }) => {
+    const userId = await getAuthUserId(ctx);
+    const p = await ctx.db.get(productionId);
+    if (!p || p.ownerId !== userId) throw new Error("Not your production");
+    if (!name.trim()) throw new Error("Name cannot be empty");
+    await ctx.db.patch(productionId, { name: name.trim(), logline: logline?.trim() || undefined });
+  },
+});
+
+export const setArchived = mutation({
+  args: { productionId: v.id("productions"), archived: v.boolean() },
+  handler: async (ctx, { productionId, archived }) => {
+    const userId = await getAuthUserId(ctx);
+    const p = await ctx.db.get(productionId);
+    if (!p || p.ownerId !== userId) throw new Error("Not your production");
+    await ctx.db.patch(productionId, { status: archived ? "archived" : "active" });
+  },
+});
+
 export const _get = internalQuery({
   args: { productionId: v.id("productions") },
   handler: (ctx, { productionId }) => ctx.db.get(productionId),
