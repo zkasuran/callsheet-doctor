@@ -10,6 +10,8 @@ dist/
 /submit/
 DEMO-*.mp4
 upload-*/
+CONTENT-*.html
+SUBMISSION.md
 
 # editor / os
 .DS_Store
