@@ -1,9 +1,7 @@
-import { mutation, internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { createInbox } from "./lib/agentmail";
 import type { Id } from "./_generated/dataModel";
 
 // Preload a few realistic productions the first time a user signs in, so the app is
@@ -502,6 +500,7 @@ export async function seedForUser(
       .first();
     if (existing) return { seeded: 0 };
 
+    const DEMO_INBOX = process.env.DEMO_INBOX; // shared inbox all demo productions send from
     const now = Date.now();
     let count = 0;
     let firstProductionId: Id<"productions"> | null = null;
@@ -513,10 +512,11 @@ export async function seedForUser(
         logline: p.logline,
         ownerId: userId,
         status: "active",
-        // The first production gets a real inbox provisioned right after (so Reply works
-        // in the demo). The others carry an illustrative address for display only.
-        inboxId: isFirst ? undefined : p.inbox,
-        inboxAddress: isFirst ? undefined : p.inbox,
+        // The first production sends from the shared demo inbox (DEMO_INBOX) so Reply
+        // works for every guest without ever creating a new inbox (AgentMail free tier
+        // caps inboxes). The others carry an illustrative address for display only.
+        inboxId: isFirst ? DEMO_INBOX ?? undefined : p.inbox,
+        inboxAddress: isFirst ? DEMO_INBOX ?? undefined : p.inbox,
       });
 
       await ctx.db.insert("scripts", {
@@ -602,44 +602,6 @@ export async function seedForUser(
       count++;
     }
 
-    // Provision one real AgentMail inbox for the first production so Reply works in the
-    // demo. Scheduled so seeding stays instant and a provisioning hiccup never blocks it.
-    if (firstProductionId) {
-      await ctx.scheduler.runAfter(0, internal.seed.provisionSeedInbox, {
-        productionId: firstProductionId,
-      });
-    }
-
     return { seeded: count };
 }
 
-/* ---------- provision a real inbox for the primary seeded production ---------- */
-
-export const _getProduction = internalQuery({
-  args: { productionId: v.id("productions") },
-  handler: (ctx, { productionId }) => ctx.db.get(productionId),
-});
-
-export const _setInbox = internalMutation({
-  args: { productionId: v.id("productions"), inboxId: v.string(), inboxAddress: v.string() },
-  handler: (ctx, a) =>
-    ctx.db.patch(a.productionId, { inboxId: a.inboxId, inboxAddress: a.inboxAddress }),
-});
-
-export const provisionSeedInbox = internalAction({
-  args: { productionId: v.id("productions") },
-  handler: async (ctx, { productionId }) => {
-    const p = await ctx.runQuery(internal.seed._getProduction, { productionId });
-    if (!p || p.inboxId) return;
-    try {
-      const username = `callsheet-demo-${Math.random().toString(36).slice(2, 8)}`;
-      const res = await createInbox({ username, displayName: "Midnight Run via Callsheet Doctor" });
-      const inboxId = res.inbox_id ?? res.inboxId ?? `${username}@agentmail.to`;
-      const inboxAddress = res.email ?? res.email_address ?? inboxId;
-      await ctx.runMutation(internal.seed._setInbox, { productionId, inboxId, inboxAddress });
-    } catch {
-      // If provisioning fails (e.g. AgentMail limit), the production simply shows the
-      // provision-inbox flow like any other. Not fatal to the seed.
-    }
-  },
-});

@@ -114,10 +114,25 @@ export const provisionInbox = action({
     // AgentMail rejects punctuation like ( ) in display names, so keep it to letters,
     // numbers, spaces and a dash.
     const safeName = p.name.replace(/[^A-Za-z0-9 -]/g, "").trim().slice(0, 40) || "Production";
-    const res = await createInbox({ username, displayName: `${safeName} via Callsheet Doctor` });
-    // AgentMail returns inbox_id and email, and the inbox id IS the address.
-    const inboxId = res.inbox_id ?? res.inboxId ?? `${username}@agentmail.to`;
-    const inboxAddress = res.email ?? res.email_address ?? inboxId;
+    let inboxId: string;
+    let inboxAddress: string;
+    try {
+      const res = await createInbox({ username, displayName: `${safeName} via Callsheet Doctor` });
+      // AgentMail returns inbox_id and email, and the inbox id IS the address.
+      inboxId = res.inbox_id ?? res.inboxId ?? `${username}@agentmail.to`;
+      inboxAddress = res.email ?? res.email_address ?? inboxId;
+    } catch (e) {
+      // AgentMail's free plan caps inboxes. Rather than dead-end, fall back to the shared
+      // demo inbox so sending still works.
+      const demo = process.env.DEMO_INBOX;
+      const isLimit = e instanceof Error && /limit/i.test(e.message);
+      if (isLimit && demo) {
+        inboxId = demo;
+        inboxAddress = demo;
+      } else {
+        throw e;
+      }
+    }
     await ctx.runMutation(internal.productions._setInbox, {
       productionId,
       inboxId,
