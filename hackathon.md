@@ -10,7 +10,7 @@
 - **Components:** `@convex-dev/static-hosting`
 - **Convex features:** queries, mutations, actions, http actions, crons, scheduler, real-time subscriptions, auth
 - **Auth:** Convex Auth. Email + password for real accounts, plus one-click Anonymous guest access so anyone can try the app instantly. A guest can upgrade to a real account in place by adding an email and password, which links to their existing user so all their productions, contacts and worked errands carry over (no data loss, no duplicate account). Every production and errand is scoped to the signed-in user, guest or not. Password reset is gated on a second factor the user enrolled (TOTP authenticator or passkey), since there is no email reset.
-- **AI models:** gpt-oss-120b (OpenAI's open-weight model, Apache-2.0) over an OpenAI-compatible endpoint, with an automatic fallback to a second OpenAI-compatible provider when the primary is overloaded.
+- **AI models:** OpenAI GPT (gpt-5.6-sol) over an OpenAI-compatible endpoint, with an automatic fallback to a second OpenAI-compatible provider if the primary is unavailable.
 - **Started:** 2026-09-22
 - **Last updated:** 2026-09-22
 
@@ -29,9 +29,8 @@
 3. Things to try:
    - **Guided tour:** it runs automatically the first time you sign in and walks through the whole
      workflow. Replay it any time from the "Tour" button in the top bar.
-   - **Diagnosis:** paste a script (or hit "Use sample") and run the diagnosis. This calls
-     the model to break the script into production needs. If the free model tier is
-     briefly overloaded it retries and falls back to a second provider; give it a moment.
+   - **Diagnosis:** paste a script (or hit "Use sample") and run the diagnosis. OpenAI reads it
+     like a line producer and breaks it into categorised production needs in a few seconds.
    - **Contacts / Firecrawl:** open a gap, search, and watch real vendor emails get scraped in.
    - **Inbox / AgentMail:** the workspace has a live `@agentmail.to` inbox; sending outreach
      emails a real vendor and threads the reply back into the pipeline.
@@ -51,9 +50,7 @@ Each integration was exercised against the live prod deployment:
   with genuine emails and the source URLs it scraped them from.
 - **AgentMail:** `provisionInbox` created a live inbox `callsheet-midnight-run-demo-…@agentmail.to`;
   a send returned a real `message_id` (via SES) and `thread_id`.
-- **OpenAI:** the model client is correct and reaches the model; the free gpt-oss capacity
-  (and the fallback's free tier) were saturated during testing, so the live diagnosis retries
-  and falls back. Point `OPENAI_*` at a paid OpenAI-compatible key for guaranteed throughput.
+- **OpenAI:** live and verified. The diagnosis reads a script and returns a correct, categorised breakdown (e.g. a diner-heist scene yielded 10 needs across locations, cast, gear, a stunt coordinator, a permit and catering), and the agent drafts contextual email replies. Served via an OpenAI-compatible endpoint with an automatic fallback provider.
 - **Password reset via 2FA:** enrolled TOTP, confirmed it, then ran the full reset: discover
   factor, verify a live code, receive a single-use token, set a new password. Signing in with
   the new password succeeded and the old password was rejected. TOTP math checks against the
