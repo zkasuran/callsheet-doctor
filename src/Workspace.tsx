@@ -11,6 +11,7 @@ import Contacts from "./pages/Contacts";
 import InboxPage from "./pages/Inbox";
 import Security from "./pages/Security";
 import Tour, { type TourStep } from "./Tour";
+import UpgradeAccount from "./UpgradeAccount";
 
 type Page = "overview" | "diagnosis" | "pipeline" | "contacts" | "inbox" | "security";
 
@@ -92,6 +93,7 @@ export default function Workspace() {
   const [page, setPage] = useState<Page>("overview");
   const [tourOpen, setTourOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const active = selected ?? productions?.[0]?._id ?? null;
   const production = useQuery(api.productions.get, active ? { productionId: active } : "skip");
 
@@ -238,7 +240,7 @@ export default function Workspace() {
             </span>
             <span className="flex-1" />
             <button
-              onClick={() => void signOut()}
+              onClick={() => setUpgradeOpen(true)}
               className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
             >
               Create an account to save your work
@@ -305,6 +307,8 @@ export default function Workspace() {
           onClose={() => setSettingsOpen(false)}
         />
       )}
+
+      {upgradeOpen && <UpgradeAccount onClose={() => setUpgradeOpen(false)} />}
     </div>
   );
 }
