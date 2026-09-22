@@ -23,6 +23,8 @@
    - The demo workspace "Midnight Run (demo)" already has a script, two vendor contacts
      that Firecrawl sourced off the live web, and a provisioned AgentMail inbox.
 3. Things to try:
+   - **Guided tour:** it runs automatically the first time you sign in and walks through the whole
+     workflow. Replay it any time from the "Tour" button in the top bar.
    - **Diagnosis:** paste a script (or hit "Use sample") and run the diagnosis. This calls
      the model to break the script into production needs. If the free model tier is
      briefly overloaded it retries and falls back to a second provider; give it a moment.
