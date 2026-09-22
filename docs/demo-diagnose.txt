@@ -1,14 +1,15 @@
-$ diagnose  (OpenAI reads the script on prod)
+$ diagnose  (OpenAI reads its own script)
 
-  [location ] Bank vault set
-  [location ] Rooftop location
-  [cast     ] Thief
-  [cast     ] Stunt performer
-  [crew     ] Stunt rigger
-  [gear     ] Tuxedo
-  [gear     ] Laser tripwire effect
-  [gear     ] Picture helicopter
-  [gear     ] Descent rope
-  [permit   ] Night rooftop filming permit
+  [location ] Working passenger ferry
+  [location ] Accessible engine room
+  [cast     ] Nurse Mara
+  [cast     ] Stranger
+  [cast     ] Ferry crew performers
+  [crew     ] Stunt coordinator
+  [crew     ] Marine safety supervisor
+  [crew     ] Special effects technician
+  [crew     ] Marine production liaison
+  [gear     ] Locked metal case
+  [gear     ] Programmable case lock light and sound
 
-  10 needs diagnosed from one scene
+  30 needs across 7 categories, from the generated script
