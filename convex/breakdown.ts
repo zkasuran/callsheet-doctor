@@ -88,6 +88,8 @@ export const _getProductionText = internalQuery({
 export const run = action({
   args: { productionId: v.id("productions") },
   handler: async (ctx, { productionId }): Promise<{ count: number }> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not signed in");
     const text = await ctx.runQuery(internal.breakdown._getProductionText, { productionId });
     if (!text.trim()) throw new Error("Add a script or treatment first");
 

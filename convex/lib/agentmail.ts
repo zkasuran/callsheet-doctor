@@ -30,7 +30,7 @@ export async function createInbox(input: {
   username: string;
   displayName?: string;
   domain?: string;
-}): Promise<{ inbox_id?: string; inboxId?: string; email_address?: string }> {
+}): Promise<{ inbox_id?: string; inboxId?: string; email?: string; email_address?: string }> {
   return req("/inboxes", {
     username: input.username,
     display_name: input.displayName,

@@ -90,6 +90,8 @@ export const find = action({
     ctx,
     { productionId, kind, query, limit },
   ): Promise<{ found: number }> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not signed in");
     const hits = await search(`${kind} ${query} contact email`, { limit: limit ?? 4 });
     let found = 0;
     for (const hit of hits) {

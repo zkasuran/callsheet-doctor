@@ -77,15 +77,19 @@ export const _setInbox = internalMutation({
 export const provisionInbox = action({
   args: { productionId: v.id("productions") },
   handler: async (ctx, { productionId }): Promise<{ inboxId: string; inboxAddress: string }> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not signed in");
     const p = await ctx.runQuery(internal.productions._get, { productionId });
     if (!p) throw new Error("Production not found");
+    if (p.ownerId !== userId) throw new Error("Not your production");
     if (p.inboxId && p.inboxAddress) {
       return { inboxId: p.inboxId, inboxAddress: p.inboxAddress };
     }
     const username = `callsheet-${slugify(p.name)}-${Math.random().toString(36).slice(2, 7)}`;
     const res = await createInbox({ username, displayName: `${p.name} (Callsheet Doctor)` });
+    // AgentMail returns inbox_id and email, and the inbox id IS the address.
     const inboxId = res.inbox_id ?? res.inboxId ?? `${username}@agentmail.to`;
-    const inboxAddress = res.email_address ?? inboxId;
+    const inboxAddress = res.email ?? res.email_address ?? inboxId;
     await ctx.runMutation(internal.productions._setInbox, {
       productionId,
       inboxId,
