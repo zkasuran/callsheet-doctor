@@ -4,6 +4,7 @@
 - **Event:** Convex All Gas Hackathon
 - **What it does:** An AI production coordinator for filmmakers. It reads a script, diagnoses every pre-production gap (locations, cast, crew, gear, permits and more), sources real vendors off the open web, then cures each gap by running real email outreach from the production's own inbox, tracking it all on a live dashboard.
 - **Live app:** https://confident-mule-621.convex.site
+- **Demo video:** https://youtu.be/uIq5ZO7AevY
 - **Repo:** https://github.com/zkasuran/callsheet-doctor
 - **Frontend:** Convex static hosting (`@convex-dev/static-hosting`), a React + Vite SPA served at the `.convex.site` URL above.
 - **Convex deployment:** prod `confident-mule-621` (team asuran, project callsheet)

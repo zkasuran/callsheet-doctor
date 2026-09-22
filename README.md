@@ -21,6 +21,8 @@ outreach from the production's own inbox, all on a live board.
 
 **[▶ Try it as a guest](https://confident-mule-621.convex.site)** — no signup, lands in a workspace preloaded with ten diagnosed productions.
 
+**[🎬 Watch the 90-second demo](https://youtu.be/uIq5ZO7AevY)**
+
 </div>
 
 ---
