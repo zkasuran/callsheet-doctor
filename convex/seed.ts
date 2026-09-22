@@ -1,4 +1,5 @@
 import { mutation, internalAction, internalMutation, internalQuery } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
@@ -483,7 +484,17 @@ export const seedIfEmpty = mutation({
   handler: async (ctx): Promise<{ seeded: number }> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not signed in");
+    return await seedForUser(ctx, userId);
+  },
+});
 
+// Shared seeding core. Called by seedIfEmpty (self-serve) and by the auth
+// afterUserCreatedOrUpdated callback (so a guest is populated the instant they sign in,
+// with no client round-trip and no empty flash). Idempotent per user.
+export async function seedForUser(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+): Promise<{ seeded: number }> {
     // Only seed a genuinely empty account.
     const existing = await ctx.db
       .query("productions")
@@ -600,8 +611,7 @@ export const seedIfEmpty = mutation({
     }
 
     return { seeded: count };
-  },
-});
+}
 
 /* ---------- provision a real inbox for the primary seeded production ---------- */
 
