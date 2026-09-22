@@ -1,0 +1,16 @@
+# deps + build output
+node_modules/
+dist/
+
+# convex + vite local env (VITE_CONVEX_URL etc)
+.env.local
+.env*.local
+
+# private submission tooling and render outputs, never shipped (house rule)
+/submit/
+DEMO-*.mp4
+upload-*/
+
+# editor / os
+.DS_Store
+*.log
